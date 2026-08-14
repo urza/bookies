@@ -1,0 +1,35 @@
+@page "/add"
+@model AddModel
+@{
+    ViewData["Title"] = "Add";
+    ViewData["TaggingEnabled"] = Model.TaggingEnabled;
+    ViewData["AutoSuggestTags"] = Model.TaggingEnabled;
+}
+
+@if (Model.Saved)
+{
+    <div class="panel narrow" style="text-align:center">
+        <p>Saved.</p>
+        <p class="muted">You can close this window.</p>
+    </div>
+    <script>setTimeout(function () { window.close(); }, 500);</script>
+}
+else
+{
+    <h1>Add bookmark</h1>
+
+    @if (Model.Error is not null)
+    {
+        <p class="notice error">@Model.Error</p>
+    }
+
+    <form method="post" class="panel" data-bookmark-form>
+        <partial name="_BookmarkFields" model="Model.Input"
+                 view-data="@(new ViewDataDictionary(ViewData) { TemplateInfo = { HtmlFieldPrefix = nameof(Model.Input) } })" />
+
+        <div class="actions">
+            <button type="submit" class="primary">Save</button>
+            <a asp-page="/Index">Cancel</a>
+        </div>
+    </form>
+}

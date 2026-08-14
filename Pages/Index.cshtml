@@ -1,0 +1,123 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = Model.Tag is { Length: > 0 } tag ? $"#{tag}" : null;
+    var filtered = !string.IsNullOrWhiteSpace(Model.Query) || !string.IsNullOrWhiteSpace(Model.Tag);
+
+    // The view you're currently looking at, so opening and saving an edit returns you to it.
+    var current = new Dictionary<string, string>();
+    if (!string.IsNullOrWhiteSpace(Model.Query)) current["q"] = Model.Query!;
+    if (!string.IsNullOrWhiteSpace(Model.Tag)) current["tag"] = Model.Tag!;
+    if (Model.Results.Number > 1) current["page"] = Model.Results.Number.ToString();
+
+    ViewData["TaggingEnabled"] = Model.TaggingEnabled;
+    ViewData["AutoSuggestTags"] = false;
+    ViewData["FocusDescription"] = true;
+}
+
+@if (Model.Tags.Count > 0)
+{
+    <div class="tagbar">
+        @foreach (var entry in Model.Tags.Take(40))
+        {
+            var active = string.Equals(entry.Tag, Model.Tag, StringComparison.Ordinal);
+            <a class="tag @(active ? "on" : "")"
+               asp-page="/Index"
+               asp-route-q="@Model.Query"
+               asp-route-tag="@(active ? null : entry.Tag)">@entry.Tag<span class="count">@entry.Count</span></a>
+        }
+    </div>
+}
+
+@if (filtered)
+{
+    <p class="muted">
+        @Model.Results.Total @(Model.Results.Total == 1 ? "bookmark" : "bookmarks")
+        @if (!string.IsNullOrWhiteSpace(Model.Query))
+        {
+            <text>matching “@Model.Query”</text>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.Tag))
+        {
+            <text>tagged #@Model.Tag</text>
+        }
+        · <a asp-page="/Index">clear</a>
+    </p>
+}
+
+@if (Model.Results.Items.Count == 0)
+{
+    <p class="empty">
+        @if (filtered)
+        {
+            <text>Nothing found.</text>
+        }
+        else if (Model.SignedIn)
+        {
+            <text>No bookmarks yet. <a asp-page="/Add">Add the first one</a>.</text>
+        }
+        else
+        {
+            <text>Nothing public here. <a asp-page="/Login">Log in</a> to see everything.</text>
+        }
+    </p>
+}
+else
+{
+    foreach (var bookmark in Model.Results.Items)
+    {
+        if (bookmark.Id == Model.EditId)
+        {
+            var saveRoute = new Dictionary<string, string>(current) { ["id"] = bookmark.Id };
+
+            <article class="bookmark editing" id="b-@bookmark.Id">
+                @if (Model.Error is not null)
+                {
+                    <p class="notice error">@Model.Error</p>
+                }
+
+                <form method="post" asp-page-handler="Save" asp-all-route-data="saveRoute" data-bookmark-form>
+                    <partial name="_BookmarkFields" model="Model.Input"
+                             view-data="@(new ViewDataDictionary(ViewData) { TemplateInfo = { HtmlFieldPrefix = nameof(Model.Input) } })" />
+
+                    <div class="actions">
+                        <button type="submit" class="primary">Save</button>
+                        <a asp-page="/Index" asp-all-route-data="current" asp-fragment="b-@bookmark.Id">Cancel</a>
+                    </div>
+
+                    @* Last in the form on purpose. CSS lifts it into the card's top corner, but
+                       leaving it after Save in the markup keeps Enter in a field on Save and puts
+                       delete last in the tab order rather than first. *@
+                    <button type="submit" class="remove"
+                            asp-page-handler="Delete" asp-all-route-data="saveRoute"
+                            onclick="return confirm('Remove this bookmark?');">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>remove
+                    </button>
+                </form>
+            </article>
+        }
+        else
+        {
+            <partial name="_BookmarkItem" model="bookmark" />
+        }
+    }
+}
+
+@if (Model.Results.PageCount > 1)
+{
+    <div class="pager">
+        @if (Model.Results.Number > 1)
+        {
+            <a asp-page="/Index" asp-route-q="@Model.Query" asp-route-tag="@Model.Tag"
+               asp-route-page="@(Model.Results.Number - 1)">← newer</a>
+        }
+        <span class="muted">@Model.Results.Number / @Model.Results.PageCount</span>
+        @if (Model.Results.Number < Model.Results.PageCount)
+        {
+            <a asp-page="/Index" asp-route-q="@Model.Query" asp-route-tag="@Model.Tag"
+               asp-route-page="@(Model.Results.Number + 1)">older →</a>
+        }
+    </div>
+}

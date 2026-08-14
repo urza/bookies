@@ -1,0 +1,54 @@
+@model Bookmark
+@{
+    var signedIn = User.Identity?.IsAuthenticated == true;
+
+    // Edit opens in place on the list, keeping whatever search / tag / page you're looking at.
+    var editRoute = new Dictionary<string, string>();
+    foreach (var key in (string[])["q", "tag", "page"])
+    {
+        var value = Context.Request.Query[key].ToString();
+        if (!string.IsNullOrEmpty(value)) editRoute[key] = value;
+    }
+    editRoute["edit"] = Model.Id;
+}
+<article class="bookmark" id="b-@Model.Id">
+    <div class="title">
+        <a href="@Model.Url" target="_blank" rel="noopener noreferrer">@Model.DisplayTitle</a>
+        @if (Model.Private)
+        {
+            <span class="lock" title="Private">🔒</span>
+        }
+    </div>
+
+    <div class="host">
+        <a href="@Model.Url" target="_blank" rel="noopener noreferrer">@Model.Host</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Description))
+    {
+        <p class="desc">@Model.Description</p>
+    }
+
+    <div class="foot">
+        <a asp-page="/Bookmark" asp-route-id="@Model.Id" title="@Model.Created.ToString("u")">
+            @Model.Created.ToString("yyyy-MM-dd")
+        </a>
+        @foreach (var tag in Model.Tags)
+        {
+            <a class="tag" asp-page="/Index" asp-route-tag="@tag">@tag</a>
+        }
+        @if (signedIn)
+        {
+            @* No #b-<id> fragment here on purpose. Scrolling to a fragment runs the focusing steps
+               on the target, and since <article> isn't focusable that falls back to the Document —
+               which blows away the description's focus. Focusing the textarea scrolls it into view
+               anyway, so the fragment bought nothing and cost the focus.
+               Inline SVG rather than an icon font — nothing to load, and it inherits currentColor. *@
+            <a class="edit" asp-page="/Index" asp-all-route-data="editRoute">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                </svg>edit
+            </a>
+        }
+    </div>
+</article>

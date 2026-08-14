@@ -1,0 +1,44 @@
+@page "/edit/{id}"
+@model EditModel
+@{
+    ViewData["Title"] = "Edit";
+    ViewData["TaggingEnabled"] = Model.TaggingEnabled;
+    ViewData["AutoSuggestTags"] = false;
+}
+
+@if (Model.Saved)
+{
+    <div class="panel narrow" style="text-align:center">
+        <p>Saved.</p>
+        <p class="muted">You can close this window.</p>
+    </div>
+    <script>setTimeout(function () { window.close(); }, 500);</script>
+}
+else
+{
+    <h1>Edit bookmark</h1>
+
+    @if (Model.Error is not null)
+    {
+        <p class="notice error">@Model.Error</p>
+    }
+
+    <form method="post" class="panel" data-bookmark-form>
+        <partial name="_BookmarkFields" model="Model.Input"
+                 view-data="@(new ViewDataDictionary(ViewData) { TemplateInfo = { HtmlFieldPrefix = nameof(Model.Input) } })" />
+
+        <div class="actions">
+            <button type="submit" class="primary">Save</button>
+            <a asp-page="/Index">Cancel</a>
+        </div>
+
+        @* Same corner, same reason as the list's inline edit — see Index.cshtml. *@
+        <button type="submit" class="remove"
+                asp-page-handler="Delete"
+                onclick="return confirm('Remove this bookmark?');">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>remove
+        </button>
+    </form>
+}

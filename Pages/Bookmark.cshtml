@@ -1,0 +1,11 @@
+@page "/b/{id}"
+@model BookmarkModel
+@{
+    ViewData["Title"] = Model.Item.DisplayTitle;
+}
+
+<partial name="_BookmarkItem" model="Model.Item" />
+
+<p class="muted" style="margin-top:1.5rem">
+    <a asp-page="/Index">← all bookmarks</a>
+</p>

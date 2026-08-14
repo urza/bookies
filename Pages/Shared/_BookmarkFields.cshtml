@@ -1,0 +1,112 @@
+@model BookmarkInput
+@{
+    // Rendered with HtmlFieldPrefix = "Input" so asp-for emits Input.Url etc. and binds back to
+    // the page's [BindProperty]. See how Index.cshtml, Add.cshtml and Edit.cshtml call this partial.
+    var taggingEnabled = ViewData["TaggingEnabled"] as bool? ?? false;
+    var autoSuggest = ViewData["AutoSuggestTags"] as bool? ?? false;
+    var focusDescription = ViewData["FocusDescription"] as bool? ?? false;
+}
+
+<div class="field">
+    <label asp-for="Url">URL</label>
+    <input asp-for="Url" type="url" required autocomplete="off" spellcheck="false" />
+</div>
+
+<div class="field">
+    <label asp-for="Title">Title</label>
+    <input asp-for="Title" type="text" autocomplete="off" />
+</div>
+
+<div class="field">
+    <label asp-for="Description">Description</label>
+    <textarea asp-for="Description" rows="3" autofocus="@(focusDescription ? "autofocus" : null)"></textarea>
+</div>
+
+<div class="field">
+    <label asp-for="Tags">Tags</label>
+    <input asp-for="Tags" type="text" autocomplete="off" placeholder="comma separated"
+           data-tags="1" data-auto="@(autoSuggest ? "1" : "0")" />
+    @if (taggingEnabled)
+    {
+        <div class="muted" style="margin-top:.4rem">
+            <button type="button" class="linkish" data-suggest="1">Suggest tags with AI</button>
+            <span data-suggest-status="1"></span>
+        </div>
+    }
+</div>
+
+<div class="field check">
+    <input asp-for="Private" />
+    <label asp-for="Private">Private — hidden from anyone not logged in</label>
+</div>
+
+<input asp-for="Popup" type="hidden" />
+
+<script>
+    (function () {
+        var form = document.querySelector('form[data-bookmark-form]');
+        if (!form) return;
+
+        // Grow the description instead of scrolling it. Browsers with CSS field-sizing already do
+        // this; the rest get the same behaviour here.
+        var description = form.querySelector('textarea');
+        var cssHandlesIt = window.CSS && CSS.supports && CSS.supports('field-sizing', 'content');
+        if (description && !cssHandlesIt) {
+            var grow = function () {
+                description.style.height = 'auto';
+                description.style.height = description.scrollHeight + 'px';
+            };
+            description.addEventListener('input', grow);
+            grow();
+        }
+
+        // Focus is not decided here — _Layout owns it, since it's the same caret the search box
+        // wants back. This file only marks the target with the autofocus attribute above.
+
+        var button = form.querySelector('[data-suggest]');
+        if (!button) return;
+
+        var tags = form.querySelector('[data-tags]');
+        var status = form.querySelector('[data-suggest-status]');
+        var field = function (name) { return form.querySelector('[name="Input.' + name + '"]'); };
+
+        function suggest(silent) {
+            var url = field('Url').value.trim();
+            if (!url) return;
+
+            button.disabled = true;
+            status.textContent = ' thinking…';
+
+            fetch('?handler=SuggestTags', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': form.querySelector('[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({
+                    url: url,
+                    title: field('Title').value,
+                    description: field('Description').value
+                })
+            })
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                var suggested = (data && data.tags) || [];
+                if (!suggested.length) {
+                    status.textContent = silent ? '' : ' nothing suggested';
+                    return;
+                }
+                // Append: whatever the user typed always wins.
+                var current = tags.value.split(',').map(function (t) { return t.trim(); }).filter(Boolean);
+                suggested.forEach(function (t) { if (current.indexOf(t) === -1) current.push(t); });
+                tags.value = current.join(', ');
+                status.textContent = '';
+            })
+            .catch(function () { status.textContent = ' suggestion failed'; })
+            .finally(function () { button.disabled = false; });
+        }
+
+        button.addEventListener('click', function () { suggest(false); });
+        if (tags.dataset.auto === '1' && !tags.value.trim()) suggest(true);
+    })();
+</script>

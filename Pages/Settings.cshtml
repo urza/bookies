@@ -1,0 +1,203 @@
+@page "/settings"
+@model SettingsModel
+@{
+    ViewData["Title"] = "Settings";
+}
+
+<h1>Settings</h1>
+
+@if (Model.Message is not null)
+{
+    <p class="notice">@Model.Message</p>
+}
+@if (Model.Error is not null)
+{
+    <p class="notice error">@Model.Error</p>
+}
+
+<div class="stack">
+    <section class="panel">
+        <h2>This instance</h2>
+        <p class="muted">
+            Logged in as <strong>@Model.Username</strong> · @Model.BookmarkCount
+            @(Model.BookmarkCount == 1 ? "bookmark" : "bookmarks") ·
+            AI tagging @(Model.TaggingEnabled ? "enabled" : "disabled") ·
+            <a href="@Model.ExportUrl">download backup</a>
+        </p>
+    </section>
+
+    <section class="panel">
+        <h2>Bookmarklet</h2>
+        <p class="muted">
+            Drag this onto your bookmarks toolbar. Clicking it on any page then opens the add form,
+            prefilled — with any text you have selected as the description.
+        </p>
+        <p>
+            @* A real javascript: link, so it can be dragged straight to the toolbar. *@
+            <a class="bookmarklet" href="@Model.Bookmarklet" draggable="true"
+               title="Drag me to your bookmarks toolbar">+ @Model.SiteTitle</a>
+        </p>
+        <details>
+            <summary class="muted">Can't drag it? Copy the code instead</summary>
+            <textarea class="snippet" data-copy readonly onclick="this.select()">@Model.Bookmarklet</textarea>
+        </details>
+    </section>
+
+    <section class="panel">
+        <h2>iOS Shortcut</h2>
+        <p class="muted">
+            Six taps on the iPhone and any page can be saved with <em>Share → your shortcut</em>.
+            It sends the page address and nothing else — the title, description and tags are filled
+            in here. Sharing a page you already saved hands back the bookmark you have rather than
+            making a second one.
+        </p>
+
+        <ol class="steps">
+            <li>Shortcuts app → <strong>+</strong> → <strong>Add Action</strong>.</li>
+            <li>Search <strong>Get Contents of URL</strong>, tap it.</li>
+            <li>Paste the address below into its <strong>URL</strong> field.</li>
+            <li>
+                Leave the cursor at the very end and tap <strong>Shortcut Input</strong> in the bar
+                above the keyboard, so the field ends with <code>&amp;url=</code> followed by a blue
+                chip.
+            </li>
+            <li>
+                Open the shortcut's <strong>ⓘ</strong>, turn on <strong>Show in Share Sheet</strong>,
+                and leave only <strong>URLs</strong> ticked under the accepted types.
+            </li>
+            <li>Name it — that name is what you'll tap in the Share Sheet.</li>
+        </ol>
+
+        <p class="muted">Step 3 — your address and token are already in it:</p>
+        @* Parenthesised so Razor doesn't read the following [ ] as an indexer. *@
+        <textarea class="snippet" data-copy readonly onclick="this.select()">@(Model.ShortcutUrl)[Shortcut Input]</textarea>
+
+        <details>
+            <summary class="muted">In a hurry? Install a Linkding one instead</summary>
+            <p class="muted">
+                @* Since iOS 15 a shortcut must be signed to import, and signing needs a Mac
+                   (`shortcuts sign`) — so this app cannot serve a prefilled one of its own, however
+                   it's hosted. Any install button is necessarily someone else's shortcut. *@
+                Shortcuts have to be signed before iOS will install one, and signing needs a Mac —
+                so Bookies can't hand you a prefilled shortcut of its own, and the button below is
+                someone else's, built for Linkding. Bookies answers that API on purpose, so it works
+                unchanged. Open this page on the iPhone, tap through <strong>Get Shortcut</strong>
+                and <strong>Set Up</strong>, then give it the two values below. Check the address it
+                posts to afterwards — a shared shortcut arrives pointing at whoever built it, and
+                you're handing it your API token.
+            </p>
+
+            <p>
+                <a class="button primary" target="_blank" rel="noopener noreferrer"
+                   href="https://www.icloud.com/shortcuts/6bf2e68a70e64c24aae578e58adcd6e7">Install the shortcut</a>
+            </p>
+
+            <div class="field">
+                <label>Server address</label>
+                <p class="token" data-copy>@Model.BaseUrl</p>
+            </div>
+
+            <div class="field">
+                <label>API token</label>
+                <p class="token" data-copy>@Model.ApiToken</p>
+            </div>
+
+            <p class="muted">
+                If it asks you to pick tags, it's a different shortcut — that variant wants a tag
+                list Bookies doesn't serve.
+            </p>
+        </details>
+    </section>
+
+    <section class="panel">
+        <h2>API token</h2>
+        <p class="token" data-copy>@Model.ApiToken</p>
+        <p class="muted">
+            Also accepted as an <code>Authorization: Token …</code> header. Generating a new one
+            takes effect immediately and breaks every bookmarklet and shortcut until you update them.
+            Your password is not affected.
+        </p>
+        <form method="post" asp-page-handler="Token" class="actions">
+            <button type="submit" onclick="return confirm('Generate a new API token? The current one stops working immediately.');">
+                Generate new token
+            </button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <h2>Change password</h2>
+        <form method="post" asp-page-handler="Password">
+            <div class="field">
+                <label asp-for="CurrentPassword">Current password</label>
+                <input asp-for="CurrentPassword" type="password" autocomplete="current-password" />
+            </div>
+            <div class="field">
+                <label asp-for="NewPassword">New password</label>
+                <input asp-for="NewPassword" type="password" autocomplete="new-password" />
+            </div>
+            <div class="field">
+                <label asp-for="ConfirmPassword">Repeat new password</label>
+                <input asp-for="ConfirmPassword" type="password" autocomplete="new-password" />
+            </div>
+            <div class="actions">
+                <button type="submit" class="primary">Change password</button>
+            </div>
+        </form>
+    </section>
+</div>
+
+<script>
+    (function () {
+        // The buttons are built here rather than written into the markup: with scripting off there
+        // is no clipboard at all, and a dead button is worse than the tap-to-select fallback the
+        // snippets already have.
+        document.querySelectorAll('[data-copy]').forEach(function (target) {
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'linkish copy';
+            button.textContent = 'Copy';
+
+            button.addEventListener('click', function () {
+                var text = 'value' in target ? target.value : (target.textContent || '').trim();
+                copy(text)
+                    .then(function () { flash(button, 'Copied'); })
+                    .catch(function () { flash(button, 'Select it and copy'); });
+            });
+
+            target.insertAdjacentElement('afterend', button);
+        });
+
+        function copy(text) {
+            // navigator.clipboard only exists in a secure context, and this app is meant to run over
+            // plain http on a LAN — so the selection route below is the usual path here, not the
+            // exception. Don't delete it in favour of the modern API alone.
+            if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+
+            var scratch = document.createElement('textarea');
+            scratch.value = text;
+            scratch.setAttribute('readonly', '');
+            scratch.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0';
+            document.body.appendChild(scratch);
+
+            // iOS Safari won't select a plain readonly textarea, and wants a range as well as a
+            // selection range before it will copy anything.
+            scratch.contentEditable = 'true';
+            scratch.readOnly = false;
+            var range = document.createRange();
+            range.selectNodeContents(scratch);
+            var selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            scratch.setSelectionRange(0, text.length);
+
+            var copied = document.execCommand('copy');
+            document.body.removeChild(scratch);
+            return copied ? Promise.resolve() : Promise.reject();
+        }
+
+        function flash(button, message) {
+            button.textContent = message;
+            setTimeout(function () { button.textContent = 'Copy'; }, 1500);
+        }
+    })();
+</script>

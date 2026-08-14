@@ -1,0 +1,337 @@
+:root {
+    --bg: #fbfbf9;
+    --card: #ffffff;
+    --fg: #1b1c1a;
+    --muted: #6d6e69;
+    --line: #e2e2dc;
+    --hover: #f2f2ee;
+    --accent: #2f6f4e;
+    --danger: #a63232;
+    --radius: 7px;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #16181a;
+        --card: #1c1f21;
+        --fg: #e5e6e3;
+        --muted: #92948f;
+        --line: #2b2e31;
+        --hover: #23272a;
+        --accent: #74c39a;
+        --danger: #e08585;
+    }
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---------- header ---------- */
+
+header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+}
+
+.bar {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: .6rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.brand {
+    font-weight: 650;
+    font-size: 1.05rem;
+    color: var(--fg);
+    white-space: nowrap;
+}
+
+.search { flex: 1; min-width: 0; }
+.search input { width: 100%; }
+
+header nav {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    white-space: nowrap;
+}
+
+/* ---------- layout ---------- */
+
+main {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 1.25rem 1rem 4rem;
+}
+
+h1 { font-size: 1.3rem; margin: 0 0 1rem; }
+h2 { font-size: 1.05rem; margin: 0 0 .75rem; }
+
+.muted { color: var(--muted); font-size: .875rem; }
+.stack > * + * { margin-top: 1rem; }
+
+/* ---------- forms ---------- */
+
+input[type=text], input[type=search], input[type=url], input[type=password], textarea {
+    width: 100%;
+    padding: .5rem .6rem;
+    font: inherit;
+    color: var(--fg);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+}
+
+input:focus, textarea:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+}
+
+/* Grows with its content rather than scrolling. The add/edit form script does the same for
+   browsers that don't support field-sizing yet. */
+textarea {
+    min-height: 4rem;
+    resize: vertical;
+    field-sizing: content;
+}
+
+label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: .25rem; }
+.field + .field { margin-top: .9rem; }
+
+.check { display: flex; align-items: center; gap: .5rem; }
+.check label { margin: 0; font-size: .95rem; color: var(--fg); }
+
+button, .button {
+    font: inherit;
+    padding: .45rem .9rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--card);
+    color: var(--fg);
+    cursor: pointer;
+}
+
+button:hover, .button:hover { background: var(--hover); text-decoration: none; }
+
+/* .button too, so a link can be the main action of a section — the Shortcut install on Settings. */
+button.primary, .button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--card);
+    font-weight: 550;
+}
+
+button.primary:hover, .button.primary:hover { filter: brightness(1.08); background: var(--accent); }
+button:disabled { opacity: .55; cursor: default; }
+
+/* Delete lives in the form's top-right corner, well away from Save. Shaped like the list's edit
+   affordance so the pair reads as one family, but red at rest rather than only on hover — it should
+   never be something you press on the way to something else. */
+.remove {
+    position: absolute;
+    top: .5rem;
+    right: .5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .78rem;
+    padding: .28rem .65rem;
+    border-color: var(--danger);
+    background: var(--bg);
+    color: var(--danger);
+}
+
+.remove:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: var(--card);
+}
+
+.linkish {
+    border: none;
+    background: none;
+    padding: 0;
+    color: var(--accent);
+}
+
+.linkish:hover { background: none; text-decoration: underline; }
+
+form.inline { display: inline; }
+.actions { display: flex; align-items: center; gap: .75rem; margin-top: 1.25rem; }
+
+/* Anchors .remove, and reserves the strip it sits in so it can't land on the URL field. Only the
+   edit form carries one — the add form keeps its normal padding. */
+form.panel { position: relative; }
+form.panel:has(.remove) { padding-top: 2.6rem; }
+
+.panel {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.1rem;
+}
+
+.narrow { max-width: 26rem; margin: 2rem auto; }
+
+.notice {
+    padding: .6rem .8rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--hover);
+    font-size: .9rem;
+}
+
+.notice.error { border-color: var(--danger); color: var(--danger); }
+
+/* ---------- tags ---------- */
+
+.tagbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    margin-bottom: 1.25rem;
+}
+
+.tag {
+    font-size: .8rem;
+    padding: .15rem .5rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--muted);
+}
+
+.tag:hover { background: var(--hover); text-decoration: none; }
+/* --card, not white: the dark theme's accent is light, so it needs dark text on top. */
+.tag.on { background: var(--accent); border-color: var(--accent); color: var(--card); }
+.tag .count { opacity: .6; margin-left: .3rem; }
+
+/* ---------- bookmark list ---------- */
+
+.bookmark {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: .85rem 1rem;
+    margin-bottom: .8rem;
+}
+
+/* The row you're editing in place. Relative so .remove lands in this card's corner, with the top
+   padding opened up to give it a strip of its own. */
+.bookmark.editing { border-color: var(--accent); position: relative; padding-top: 2.6rem; }
+.bookmark.editing .actions { margin-top: 1rem; }
+
+.bookmark .title { font-size: 1.02rem; font-weight: 550; }
+.bookmark .host { font-size: .8rem; color: var(--muted); }
+
+/* Marked by a rule down the left rather than boxed in — reads as a quote, not a second card. */
+.bookmark .desc {
+    margin: .5rem 0 .65rem;
+    padding: .05rem 0 .05rem .75rem;
+    border-left: 3px solid var(--line);
+    border-left-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    white-space: pre-wrap;
+}
+
+.bookmark .foot { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; font-size: .8rem; color: var(--muted); }
+.bookmark .lock { font-size: .75rem; color: var(--muted); }
+
+/* Pushed to the far right of the row so it's always in the same place to aim for.
+   Sits on --bg, since the card it's on is already --card. */
+.bookmark .foot .edit {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .78rem;
+    padding: .28rem .65rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--fg);
+}
+
+/* Shared with the edit form's remove button — same size icon in the same size pill. */
+.bookmark .foot .edit svg, .remove svg {
+    width: .95em;
+    height: .95em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.bookmark .foot .edit:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--card);
+    text-decoration: none;
+}
+
+.empty { text-align: center; color: var(--muted); padding: 3rem 1rem; }
+
+.pager { display: flex; gap: 1rem; align-items: center; justify-content: center; margin-top: 1.75rem; }
+
+/* ---------- settings ---------- */
+
+.token {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .85rem;
+    word-break: break-all;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: .5rem .6rem;
+}
+
+.bookmarklet {
+    display: inline-block;
+    padding: .45rem 1rem;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    background: var(--accent);
+    color: var(--card);
+    font-weight: 600;
+    cursor: grab;
+}
+
+.bookmarklet:hover { filter: brightness(1.08); text-decoration: none; }
+.bookmarklet:active { cursor: grabbing; }
+
+details summary { cursor: pointer; font-size: .875rem; }
+details .snippet { margin-top: .5rem; }
+.steps { margin: .6rem 0 0; padding-left: 1.3rem; font-size: .875rem; color: var(--muted); }
+.steps li + li { margin-top: .35rem; }
+
+/* Added by script next to anything marked data-copy, so it never renders without a clipboard. */
+.copy { margin-top: .35rem; font-size: .8rem; }
+
+.snippet {
+    width: 100%;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .78rem;
+    min-height: 4.5rem;
+    white-space: pre;
+    overflow-x: auto;
+}
+
+@media (max-width: 34rem) {
+    .bar { flex-wrap: wrap; }
+    .search { order: 3; flex-basis: 100%; }
+}

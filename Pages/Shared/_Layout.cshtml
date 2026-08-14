@@ -1,0 +1,101 @@
+@inject IOptions<AppOptions> AppOptions
+@{
+    var siteTitle = AppOptions.Value.Title;
+    var signedIn = User.Identity?.IsAuthenticated == true;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(ViewData["Title"] is null ? siteTitle : $"{ViewData["Title"]} · {siteTitle}")</title>
+    <link rel="stylesheet" href="~/style.css" asp-append-version="true" />
+</head>
+<body>
+<header>
+    <div class="bar">
+        <a class="brand" asp-page="/Index">@siteTitle</a>
+
+        <form class="search" asp-page="/Index" method="get" role="search">
+            <input type="search" name="q" value="@Context.Request.Query["q"]" placeholder="Search…" aria-label="Search bookmarks" />
+        </form>
+
+        <nav>
+            @if (signedIn)
+            {
+                <a asp-page="/Add">Add</a>
+                <a asp-page="/Settings">Settings</a>
+                <form asp-page="/Logout" method="post" class="inline">
+                    <button type="submit" class="linkish">Log out</button>
+                </form>
+            }
+            else
+            {
+                <a asp-page="/Login">Log in</a>
+            }
+        </nav>
+    </div>
+</header>
+
+<main>
+    @RenderBody()
+</main>
+
+@await RenderSectionAsync("Scripts", required: false)
+
+<script>
+    (function () {
+        var form = document.querySelector('form.search');
+        if (!form) return;
+
+        var input = form.querySelector('input[name="q"]');
+        var submitted = input.value.trim();
+        var timer;
+
+        function search(delay) {
+            clearTimeout(timer);
+            timer = setTimeout(function () {
+                if (input.value.trim() === submitted) return;
+                form.submit();
+            }, delay);
+        }
+
+        input.addEventListener('input', function () {
+            var value = input.value.trim();
+            // Emptying the box should feel instant; one or two characters aren't worth a round trip.
+            if (value.length === 0) search(0);
+            else if (value.length < 3) clearTimeout(timer);
+            else search(500);
+        });
+
+        // Fired by the browser's own clear (×) button, and by Enter.
+        input.addEventListener('search', function () { search(0); });
+    })();
+
+    // One place decides who owns the caret on load. An [autofocus] field — only the inline edit
+    // form sets one — always beats the search box, which otherwise gets it back so that returning
+    // from a search just continues typing. The attribute alone can't do this: it drops the caret in
+    // front of the existing text, and browsers abandon it if anything touches focus first.
+    (function () {
+        var edit = document.querySelector('[autofocus]');
+        var search = document.querySelector('form.search input[name="q"]');
+        // A q in the query string means you arrived here from the search box, so the caret belongs
+        // back in it. Test for the key, not for a value: clearing the box submits an empty q, and
+        // that reload has to hand the caret back too or backspacing to nothing loses your place.
+        // A plain visit or a tag link has no q at all, and must not steal focus.
+        var searching = search && new URLSearchParams(location.search).has('q');
+        var target = edit || (searching ? search : null);
+        if (!target) return;
+        // Something already grabbed focus for itself — leave it alone.
+        if (document.activeElement !== document.body && document.activeElement !== target) return;
+
+        target.focus();
+        // End of the text, so you keep typing rather than typing in front of it. Only these types
+        // support a selection range; url/email/number throw InvalidStateError.
+        if (target.tagName === 'TEXTAREA' || target.type === 'search' || target.type === 'text') {
+            target.setSelectionRange(target.value.length, target.value.length);
+        }
+    })();
+</script>
+</body>
+</html>
