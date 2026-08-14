@@ -1,10 +1,18 @@
 @model BookmarkInput
+@inject BookmarkStore Store
 @{
     // Rendered with HtmlFieldPrefix = "Input" so asp-for emits Input.Url etc. and binds back to
     // the page's [BindProperty]. See how Index.cshtml, Add.cshtml and Edit.cshtml call this partial.
     var taggingEnabled = ViewData["TaggingEnabled"] as bool? ?? false;
     var autoSuggest = ViewData["AutoSuggestTags"] as bool? ?? false;
     var focusDescription = ViewData["FocusDescription"] as bool? ?? false;
+
+    // Your own vocabulary, most-used first — reusing a tag you already have beats inventing a near
+    // duplicate, which is the same reason the AI prompt gets this list. Every form that renders this
+    // partial is behind auth, so private bookmarks count. The store reads from memory; no query.
+    // The cap only exists so the page can't grow without bound — a couple of hundred tags is a few
+    // KB of JSON, and completion is worth much less if the tag you want isn't in the list.
+    var vocabulary = Store.TagCounts(includePrivate: true).Select(t => t.Tag).Take(200).ToList();
 }
 
 <div class="field">
@@ -22,10 +30,18 @@
     <textarea asp-for="Description" rows="3" autofocus="@(focusDescription ? "autofocus" : null)"></textarea>
 </div>
 
-<div class="field">
+<div class="field tagfield">
     <label asp-for="Tags">Tags</label>
     <input asp-for="Tags" type="text" autocomplete="off" placeholder="comma separated"
            data-tags="1" data-auto="@(autoSuggest ? "1" : "0")" />
+
+    @* Both the completion menu and the badges are filled in by script, for the same reason the
+       Settings page builds its copy buttons in script: with scripting off they'd be dead controls,
+       and the field on its own still works. *@
+    <div class="tagmenu" data-tag-menu hidden></div>
+    <div class="tagpicks" data-tag-picks></div>
+    <script type="application/json" data-tag-vocabulary>@Json.Serialize(vocabulary)</script>
+
     @if (taggingEnabled)
     {
         <div class="muted" style="margin-top:.4rem">
@@ -63,10 +79,133 @@
         // Focus is not decided here — _Layout owns it, since it's the same caret the search box
         // wants back. This file only marks the target with the autofocus attribute above.
 
+        var tags = form.querySelector('[data-tags]');
+        var menu = form.querySelector('[data-tag-menu]');
+        var picks = form.querySelector('[data-tag-picks]');
+        var source = form.querySelector('[data-tag-vocabulary]');
+        var vocabulary = JSON.parse((source && source.textContent) || '[]');
+        var active = -1;
+
+        function lower(value) { return value.toLowerCase(); }
+
+        // Commas only, matching Bookmark.ParseTags when it sees one — a tag may contain a space.
+        function selected() {
+            return tags.value.split(',').map(function (t) { return t.trim(); }).filter(Boolean);
+        }
+
+        // Everything after the last comma is the tag being typed right now; the rest is settled.
+        function typing() {
+            return tags.value.slice(tags.value.lastIndexOf(',') + 1).trim().toLowerCase();
+        }
+
+        // Mark the badges that are already in the field, so the row doubles as what's on this
+        // bookmark rather than only as a list to pick from.
+        function sync() {
+            var chosen = selected().map(lower);
+            var badges = picks.querySelectorAll('[data-tag]');
+            for (var i = 0; i < badges.length; i++) {
+                badges[i].classList.toggle('on', chosen.indexOf(badges[i].dataset.tag) !== -1);
+            }
+        }
+
+        function closeMenu() {
+            menu.hidden = true;
+            menu.textContent = '';
+            active = -1;
+        }
+
+        function caretToEnd() {
+            tags.focus();
+            tags.setSelectionRange(tags.value.length, tags.value.length);
+        }
+
+        // Replace the half-typed tag with the chosen one, then leave a separator ready for the next.
+        function complete(tag) {
+            var comma = tags.value.lastIndexOf(',');
+            tags.value = (comma === -1 ? '' : tags.value.slice(0, comma + 1) + ' ') + tag + ', ';
+            closeMenu();
+            sync();
+            caretToEnd();
+        }
+
+        function toggle(tag) {
+            var list = selected();
+            var at = list.map(lower).indexOf(tag);
+            if (at === -1) list.push(tag); else list.splice(at, 1);
+            tags.value = list.join(', ');
+            closeMenu();
+            sync();
+            caretToEnd();
+        }
+
+        function refresh() {
+            var typed = typing();
+            if (!typed) return closeMenu();
+
+            // Already-chosen tags drop out, which includes an exact match for what's being typed.
+            var chosen = selected().map(lower);
+            var matches = vocabulary.filter(function (t) {
+                return t.indexOf(typed) !== -1 && chosen.indexOf(t) === -1;
+            }).slice(0, 8);
+
+            if (!matches.length) return closeMenu();
+
+            menu.textContent = '';
+            matches.forEach(function (t) {
+                var item = document.createElement('button');
+                item.type = 'button';
+                item.textContent = t;
+                // Clicking must not blur the field first, or the menu is gone before the click lands.
+                item.addEventListener('mousedown', function (e) { e.preventDefault(); });
+                item.addEventListener('click', function () { complete(t); });
+                menu.appendChild(item);
+            });
+            active = -1;
+            menu.hidden = false;
+        }
+
+        function highlight(items) {
+            for (var i = 0; i < items.length; i++) items[i].classList.toggle('on', i === active);
+        }
+
+        vocabulary.slice(0, 12).forEach(function (t) {
+            var badge = document.createElement('button');
+            badge.type = 'button';
+            badge.className = 'tag';
+            badge.dataset.tag = t;
+            badge.textContent = t;
+            badge.addEventListener('click', function () { toggle(t); });
+            picks.appendChild(badge);
+        });
+
+        tags.addEventListener('input', function () { sync(); refresh(); });
+        tags.addEventListener('blur', closeMenu);
+
+        tags.addEventListener('keydown', function (e) {
+            if (menu.hidden) return;
+            var items = menu.querySelectorAll('button');
+
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (e.key === 'ArrowDown') active = active + 1 >= items.length ? 0 : active + 1;
+                else active = active - 1 < 0 ? items.length - 1 : active - 1;
+                highlight(items);
+            } else if (e.key === 'Enter' || e.key === 'Tab') {
+                // Nothing highlighted means you typed a tag of your own: Enter still submits.
+                if (active === -1) return;
+                e.preventDefault();
+                complete(items[active].textContent);
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                closeMenu();
+            }
+        });
+
+        sync();
+
         var button = form.querySelector('[data-suggest]');
         if (!button) return;
 
-        var tags = form.querySelector('[data-tags]');
         var status = form.querySelector('[data-suggest-status]');
         var field = function (name) { return form.querySelector('[name="Input.' + name + '"]'); };
 
@@ -97,9 +236,10 @@
                     return;
                 }
                 // Append: whatever the user typed always wins.
-                var current = tags.value.split(',').map(function (t) { return t.trim(); }).filter(Boolean);
+                var current = selected();
                 suggested.forEach(function (t) { if (current.indexOf(t) === -1) current.push(t); });
                 tags.value = current.join(', ');
+                sync();
                 status.textContent = '';
             })
             .catch(function () { status.textContent = ' suggestion failed'; })

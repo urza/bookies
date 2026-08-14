@@ -4,6 +4,7 @@
     ViewData["Title"] = "Edit";
     ViewData["TaggingEnabled"] = Model.TaggingEnabled;
     ViewData["AutoSuggestTags"] = false;
+    ViewData["Popup"] = Model.Input.Popup;
 }
 
 @if (Model.Saved)
@@ -16,7 +17,11 @@
 }
 else
 {
-    <h1>Edit bookmark</h1>
+    @* Same as Add: in the bookmarklet popup the window title carries this already. *@
+    @if (!Model.Input.Popup)
+    {
+        <h1>Edit bookmark</h1>
+    }
 
     @if (Model.Error is not null)
     {

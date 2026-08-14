@@ -184,6 +184,22 @@ link and the form action both carry the current view for the same reason.
 `Pages/Edit.cshtml` survives only for the bookmarklet popup: that window has no list to edit
 inside. Don't delete it, and don't route the list's edit link back to it.
 
+### The bookmarklet popup
+
+`popup=true` puts `/add` and `/edit/{id}` into a chrome-less mode: Add and Edit pass it to
+`ViewData["Popup"]`, `_Layout` then drops the whole header — brand, search, navigation — and marks
+`<body class="popup">` so the CSS can tighten the spacing. The page's own `<h1>` goes too; the window
+title bar already says what this is. Nothing to navigate to justifies a header in a window whose
+next action is closing itself.
+
+The window can't be sized correctly from the outside: `window.open` asks for pixels, but the popup
+inherits the opener's **zoom level**, so a form that fits at 100% is cut off at 150% and Save ends up
+below the fold. `_Layout`'s popup script measures the overflow after load and grows the window to
+match — a script-opened window may resize itself. It reads CSS pixels (`scrollHeight`,
+`innerHeight`) but resizes in window units (`outerHeight`), which zoom doesn't scale, so it converts
+with the `outerWidth / innerWidth` ratio and re-measures for a few frames, since each resize
+reflows. Don't replace it with a fixed size in the bookmarklet — that's the thing that doesn't work.
+
 The description textarea takes `autofocus` here and nowhere else — it's the field you almost always
 came to change.
 
@@ -372,6 +388,14 @@ Deferred deliberately: multi-user, RSS, Netscape HTML import/export, archiving, 
     `navigator.clipboard` is only defined in a secure context and this app is expected on plain
     HTTP over a LAN, so the `execCommand` selection route is the normal path, not the fallback —
     keep both, and keep the readonly textareas' tap-to-select as the no-JS answer.
-  - **Tag suggestion** and the **delete confirm**.
+  - **Tag picks and completion** (`_BookmarkFields`) — the form ships your existing tag vocabulary
+    (most-used first, from `BookmarkStore.TagCounts`) as a JSON script block. One script turns the
+    first dozen into clickable badges that toggle in and out of the field and light up when present,
+    and completes the tag being typed — the text after the last comma — from the same list, with
+    arrow keys, Enter, Escape and click. Enter with nothing highlighted still submits the form, so a
+    brand new tag isn't harder to type than an existing one. Badges and menu are both built in JS,
+    like the Copy buttons, so nothing renders dead; with scripting off the field is a plain text box.
+  - **Popup fit** (`_Layout`) — see the bookmarklet popup section above.
+  - **AI tag suggestion** and the **delete confirm**.
 - The bookmarklet on the Settings page is a real `<a href="javascript:…">` so it can be dragged
   onto the toolbar. The copy-paste textarea stays as a fallback — dragging isn't possible on mobile.

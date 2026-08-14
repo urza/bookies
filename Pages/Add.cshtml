@@ -4,6 +4,7 @@
     ViewData["Title"] = "Add";
     ViewData["TaggingEnabled"] = Model.TaggingEnabled;
     ViewData["AutoSuggestTags"] = Model.TaggingEnabled;
+    ViewData["Popup"] = Model.Input.Popup;
 }
 
 @if (Model.Saved)
@@ -16,7 +17,12 @@
 }
 else
 {
-    <h1>Add bookmark</h1>
+    @* The popup's own title bar already says what this window is; the row it would cost is better
+       spent on the form. *@
+    @if (!Model.Input.Popup)
+    {
+        <h1>Add bookmark</h1>
+    }
 
     @if (Model.Error is not null)
     {

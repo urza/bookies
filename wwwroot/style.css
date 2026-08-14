@@ -221,6 +221,44 @@ form.panel:has(.remove) { padding-top: 2.6rem; }
 .tag.on { background: var(--accent); border-color: var(--accent); color: var(--card); }
 .tag .count { opacity: .6; margin-left: .3rem; }
 
+/* ---------- tag field ---------- */
+
+/* Anchors the completion menu to the input it completes. */
+.tagfield { position: relative; }
+
+/* Overlays whatever follows instead of pushing it down, so the form doesn't jump while you type —
+   which matters most in the bookmarklet popup, where Save is just below. */
+.tagmenu {
+    position: absolute;
+    z-index: 10;
+    left: 0;
+    right: 0;
+    margin-top: .15rem;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgb(0 0 0 / .16);
+}
+
+.tagmenu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: .3rem .65rem;
+    font-size: .9rem;
+    border: none;
+    border-radius: 0;
+    background: none;
+}
+
+/* .on is the arrow-key highlight; hover has to look the same or the two disagree. */
+.tagmenu button:hover, .tagmenu button.on { background: var(--hover); }
+
+/* Built by script — see _BookmarkFields. Empty when you have no tags yet, and then it takes no room. */
+.tagpicks { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .45rem; }
+.tagpicks:empty { display: none; }
+
 /* ---------- bookmark list ---------- */
 
 .bookmark {
@@ -335,3 +373,15 @@ details .snippet { margin-top: .5rem; }
     .bar { flex-wrap: wrap; }
     .search { order: 3; flex-basis: 100%; }
 }
+
+/* ---------- bookmarklet popup ---------- */
+
+/* One form in a small window, often at whatever zoom level the page you came from was using. No
+   header renders here (see _Layout), and everything left over is tightened so the whole form fits
+   without scrolling. _Layout also grows the window itself when it doesn't. */
+body.popup main { max-width: none; padding: .8rem; }
+body.popup .panel { padding: .9rem; }
+body.popup .field + .field { margin-top: .65rem; }
+body.popup textarea { min-height: 3rem; }
+body.popup .actions { margin-top: .9rem; }
+body.popup .narrow { margin: 1.5rem auto; }

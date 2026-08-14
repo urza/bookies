@@ -2,6 +2,10 @@
 @{
     var siteTitle = AppOptions.Value.Title;
     var signedIn = User.Identity?.IsAuthenticated == true;
+
+    // The bookmarklet window is one form and nothing else: no header, no search, no navigation —
+    // there is nowhere to navigate to from a window you're about to close. Add and Edit set this.
+    var popup = ViewData["Popup"] as bool? ?? false;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -11,31 +15,34 @@
     <title>@(ViewData["Title"] is null ? siteTitle : $"{ViewData["Title"]} · {siteTitle}")</title>
     <link rel="stylesheet" href="~/style.css" asp-append-version="true" />
 </head>
-<body>
-<header>
-    <div class="bar">
-        <a class="brand" asp-page="/Index">@siteTitle</a>
+<body class="@(popup ? "popup" : null)">
+@if (!popup)
+{
+    <header>
+        <div class="bar">
+            <a class="brand" asp-page="/Index">@siteTitle</a>
 
-        <form class="search" asp-page="/Index" method="get" role="search">
-            <input type="search" name="q" value="@Context.Request.Query["q"]" placeholder="Search…" aria-label="Search bookmarks" />
-        </form>
+            <form class="search" asp-page="/Index" method="get" role="search">
+                <input type="search" name="q" value="@Context.Request.Query["q"]" placeholder="Search…" aria-label="Search bookmarks" />
+            </form>
 
-        <nav>
-            @if (signedIn)
-            {
-                <a asp-page="/Add">Add</a>
-                <a asp-page="/Settings">Settings</a>
-                <form asp-page="/Logout" method="post" class="inline">
-                    <button type="submit" class="linkish">Log out</button>
-                </form>
-            }
-            else
-            {
-                <a asp-page="/Login">Log in</a>
-            }
-        </nav>
-    </div>
-</header>
+            <nav>
+                @if (signedIn)
+                {
+                    <a asp-page="/Add">Add</a>
+                    <a asp-page="/Settings">Settings</a>
+                    <form asp-page="/Logout" method="post" class="inline">
+                        <button type="submit" class="linkish">Log out</button>
+                    </form>
+                }
+                else
+                {
+                    <a asp-page="/Login">Log in</a>
+                }
+            </nav>
+        </div>
+    </header>
+}
 
 <main>
     @RenderBody()
@@ -97,5 +104,39 @@
         }
     })();
 </script>
+
+@if (popup)
+{
+    <script>
+        // Grow the popup until the form fits. The bookmarklet can only ask for a fixed pixel size,
+        // but the window inherits the opener's zoom level, so at 150% the same form needs half again
+        // as much room and the buttons end up below the fold. A window opened by script is allowed
+        // to resize itself, so measure what's actually overflowing and ask for exactly that.
+        //
+        // Measure in CSS pixels (scrollHeight, innerHeight) but resize in the window's own units
+        // (outerHeight), which zoom does not scale — hence the ratio, and hence the retry: each
+        // resize reflows the page, so the next pass sees what the last one missed.
+        (function () {
+            if (!window.opener || !window.resizeTo) return;
+
+            function fit(pass) {
+                var zoom = window.innerWidth ? window.outerWidth / window.innerWidth : 1;
+                var width = Math.min(Math.round(window.outerWidth + (700 - window.innerWidth) * zoom), screen.availWidth);
+                if (pass === 0 && width > window.outerWidth) window.resizeTo(width, window.outerHeight);
+
+                var over = document.documentElement.scrollHeight - window.innerHeight;
+                if (over > 2) {
+                    var height = Math.min(Math.round(window.outerHeight + over * zoom), screen.availHeight - 40);
+                    if (height > window.outerHeight) window.resizeTo(window.outerWidth, height);
+                }
+
+                // Four passes is plenty to converge, and stops dead if it can't.
+                if (pass < 3) requestAnimationFrame(function () { fit(pass + 1); });
+            }
+
+            window.addEventListener('load', function () { fit(0); });
+        })();
+    </script>
+}
 </body>
 </html>
