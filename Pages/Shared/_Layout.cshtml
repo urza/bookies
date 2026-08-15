@@ -13,6 +13,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@(ViewData["Title"] is null ? siteTitle : $"{ViewData["Title"]} · {siteTitle}")</title>
+
+    @* SVG first — it follows the browser's light/dark theme; the .ico is for the browsers that
+       ignore SVG icons, and is declared rather than left to the default /favicon.ico request so
+       they don't have to guess. *@
+    <link rel="icon" href="~/favicon.svg" type="image/svg+xml" asp-append-version="true" />
+    <link rel="alternate icon" href="~/favicon.ico" sizes="16x16 32x32 48x48" asp-append-version="true" />
+    <link rel="apple-touch-icon" href="~/apple-touch-icon.png" asp-append-version="true" />
+
     <link rel="stylesheet" href="~/style.css" asp-append-version="true" />
 </head>
 <body class="@(popup ? "popup" : null)">
@@ -20,7 +28,14 @@
 {
     <header>
         <div class="bar">
-            <a class="brand" asp-page="/Index">@siteTitle</a>
+            @* The favicon's own geometry, inline so it costs no request and needs no second copy of
+               the amber — the tile is where style.css's --accent comes from. *@
+            <a class="brand" asp-page="/Index">
+                <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+                    <rect width="32" height="32" rx="7" fill="#f0b429" />
+                    <path d="M12 6h8a2 2 0 0 1 2 2v18l-6-8-6 8V8a2 2 0 0 1 2-2z" fill="#1b1c1a" />
+                </svg>@siteTitle
+            </a>
 
             <form class="search" asp-page="/Index" method="get" role="search">
                 <input type="search" name="q" value="@Context.Request.Query["q"]" placeholder="Search…" aria-label="Search bookmarks" />
@@ -29,7 +44,7 @@
             <nav>
                 @if (signedIn)
                 {
-                    <a asp-page="/Add">Add</a>
+                    <a class="add" asp-page="/Add">Add</a>
                     <a asp-page="/Settings">Settings</a>
                     <form asp-page="/Logout" method="post" class="inline">
                         <button type="submit" class="linkish">Log out</button>

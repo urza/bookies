@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Bookies">
+    <!-- A bookmark ribbon knocked out of an amber tile. The ink is style.css's --ink: off-white on
+         yellow measures 1.8:1 and mushes into the tile at 16px, where dark ink is 9.2:1. Amber holds
+         up against a light or a dark browser theme, so unlike the rest of the palette this needs no
+         prefers-color-scheme swap — which also keeps it identical to the rasterised favicon.ico and
+         apple-touch-icon.png. Keep the three in step.
+
+         The ribbon sits on even coordinates and its notch is a full 8 units deep on purpose: both
+         are what stop it turning into a smudge at 16px, the size it's actually seen at. -->
+    <rect width="32" height="32" rx="7" fill="#f0b429" />
+    <path d="M12 6h8a2 2 0 0 1 2 2v18l-6-8-6 8V8a2 2 0 0 1 2-2z" fill="#1b1c1a" />
+</svg>

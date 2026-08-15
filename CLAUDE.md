@@ -55,6 +55,7 @@ Services/BookmarkService.cs the shared create pipeline used by both API entry po
 Pages/                      Index, Add, Edit, Bookmark (permalink), Login, Logout, Settings
 Pages/Shared/               _Layout, _BookmarkItem, _BookmarkFields
 wwwroot/style.css
+wwwroot/favicon.svg        the icon; favicon.ico and apple-touch-icon.png are rasterised from it
 Dockerfile / .dockerignore / docker-compose.yml
 ```
 
@@ -275,6 +276,42 @@ OpenAI-compatible shape, so Ollama / LM Studio / llama.cpp / vLLM / LiteLLM all 
     tags were supplied.
   - Edit page: a "suggest tags" button, so anything can be re-tagged later.
 - AI tags are *suggestions* in the UI and are appended to, never replace, tags the user supplied.
+
+### Look
+
+The palette comes from the icon rather than being chosen alongside it: the mark is a bookmark ribbon
+on an amber tile, so amber is the accent everywhere and the tile's dark ink is what sits on top of it.
+One accent, spent only on things you can act on — the list is a wall of titles, and a title you can
+click is not news. Hence `--accent` on fills, `--link` for the same idea at text size (darker in the
+light theme, where amber on white is unreadable), and `--ink` for text on a filled accent or danger
+control, which is dark in both themes because both fills are light. `_Layout` inlines the favicon's
+geometry beside the site title so the accent reads as the app's own colour and not a CSS decision.
+
+Depth is `--bg` under `--card` plus a hairline and one soft shadow — no heavy borders. `--line-strong`
+is the hover state of a border, so cards and controls answer the pointer without moving. `:root` sets
+`color-scheme` and `accent-color`, which is what makes the checkbox, the scrollbars and the search
+field's own clear button render in the theme rather than defaulting to light.
+
+Two small conventions worth keeping: tags are stored bare and the `#` is drawn by CSS
+(`.tag::before`), so the marker never reaches the data; and `header .search input` is qualified past
+`header` because the shared `input` rule sets the `background` shorthand and would otherwise wipe out
+the search glyph on source order alone.
+
+### Icon
+
+A bookmark ribbon knocked out of a rounded amber tile: `#f0b429` behind `style.css`'s `--ink`.
+The ink is not the page's off-white — off-white on yellow is 1.8:1 and the ribbon mushes into the
+tile at 16px, where ink is 9.2:1. Amber carries a light or a dark browser theme on its own, so the
+icon has no `prefers-color-scheme` swap, which is also what lets all three files stay identical.
+`wwwroot/favicon.svg` is the source of truth; `favicon.ico` (16/32/48) and `apple-touch-icon.png`
+(180, full bleed — iOS applies its own mask) are that same geometry rasterised, for browsers that
+ignore SVG icons. `_Layout` declares all three rather than leaving `/favicon.ico` to chance.
+
+Change the SVG and the raster files no longer match, so redraw them together. Two things in the
+geometry are load-bearing at 16px, where the icon is actually seen: the ribbon sits on even
+coordinates (10–22, 6–26 in a 32-unit box) so its edges land on whole pixels, and its notch is a
+full 8 units deep. A shallower notch antialiases into a grey smudge and the icon reads as a plain
+white rectangle.
 
 ## Configuration
 
