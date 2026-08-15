@@ -46,67 +46,79 @@
     <section class="panel">
         <h2>iOS Shortcut</h2>
         <p class="muted">
-            Six taps on the iPhone and any page can be saved with <em>Share → your shortcut</em>.
-            It sends the page address and nothing else — the title, description and tags are filled
-            in here. Sharing a page you already saved hands back the bookmark you have rather than
-            making a second one.
+            A minute in the Shortcuts app and any page can be saved with <em>Share → your
+            shortcut</em>. It sends the page address and nothing else — the title, description and
+            tags are filled in here. Sharing a page you already saved hands back the bookmark you
+            have rather than making a second one.
         </p>
 
         <ol class="steps">
-            <li>Shortcuts app → <strong>+</strong> → <strong>Add Action</strong>.</li>
-            <li>Search <strong>Get Contents of URL</strong>, tap it.</li>
+            <li>
+                Shortcuts app → <strong>+</strong> → open the shortcut's <strong>ⓘ</strong> →
+                turn on <strong>Show in Share Sheet</strong>.
+            </li>
+            <li>
+                Under the accepted types, leave <strong>Safari web pages</strong> <em>and</em>
+                <strong>URLs</strong> ticked. Safari shares a <em>web page</em>, not a bare URL —
+                a shortcut accepting only URLs never appears in Safari's share sheet.
+            </li>
+            <li><strong>Add Action</strong> → search <strong>Get Contents of URL</strong>, tap it.</li>
             <li>Paste the address below into its <strong>URL</strong> field.</li>
             <li>
                 Leave the cursor at the very end and tap <strong>Shortcut Input</strong> in the bar
-                above the keyboard, so the field ends with <code>&amp;url=</code> followed by a blue
-                chip.
-            </li>
-            <li>
-                Open the shortcut's <strong>ⓘ</strong>, turn on <strong>Show in Share Sheet</strong>,
-                and leave only <strong>URLs</strong> ticked under the accepted types.
+                above the keyboard, so the field ends with <code>&amp;url=</code> followed by a
+                blue chip.
             </li>
             <li>Name it — that name is what you'll tap in the Share Sheet.</li>
         </ol>
 
-        <p class="muted">Step 3 — your address and token are already in it:</p>
-        @* Parenthesised so Razor doesn't read the following [ ] as an indexer. *@
-        <textarea class="snippet" data-copy readonly onclick="this.select()">@(Model.ShortcutUrl)[Shortcut Input]</textarea>
+        <p class="muted">
+            Step 4 — your address and token are already in it. It ends at <code>&amp;url=</code>
+            on purpose; the blue chip from step 5 is what completes it.
+        </p>
+        <textarea class="snippet" data-copy readonly onclick="this.select()">@Model.ShortcutUrl</textarea>
 
         <details>
-            <summary class="muted">In a hurry? Install a Linkding one instead</summary>
-            <p class="muted">
-                @* Since iOS 15 a shortcut must be signed to import, and signing needs a Mac
-                   (`shortcuts sign`) — so this app cannot serve a prefilled one of its own, however
-                   it's hosted. Any install button is necessarily someone else's shortcut. *@
-                Shortcuts have to be signed before iOS will install one, and signing needs a Mac —
-                so Bookies can't hand you a prefilled shortcut of its own, and the button below is
-                someone else's, built for Linkding. Bookies answers that API on purpose, so it works
-                unchanged. Open this page on the iPhone, tap through <strong>Get Shortcut</strong>
-                and <strong>Set Up</strong>, then give it the two values below. Check the address it
-                posts to afterwards — a shared shortcut arrives pointing at whoever built it, and
-                you're handing it your API token.
-            </p>
-
-            <p>
-                <a class="button primary" target="_blank" rel="noopener noreferrer"
-                   href="https://www.icloud.com/shortcuts/6bf2e68a70e64c24aae578e58adcd6e7">Install the shortcut</a>
-            </p>
-
-            <div class="field">
-                <label>Server address</label>
-                <p class="token" data-copy>@Model.BaseUrl</p>
-            </div>
-
-            <div class="field">
-                <label>API token</label>
-                <p class="token" data-copy>@Model.ApiToken</p>
-            </div>
-
-            <p class="muted">
-                If it asks you to pick tags, it's a different shortcut — that variant wants a tag
-                list Bookies doesn't serve.
-            </p>
+            <summary class="muted">What the finished shortcut looks like</summary>
+            <img class="screenshot" src="/ios-shortcut.jpeg"
+                 alt="The finished shortcut: Receive Safari Web Pages and URLs from Share Sheet, then Get Contents of URL with the address ending in url= followed by the Shortcut Input chip." />
         </details>
+
+        <h3>Optional: a “Saved” banner</h3>
+        <p class="muted">
+            On its own the shortcut finishes silently. Two more actions turn the server's reply
+            into a notification — <em>Saved: the page's title</em>, <em>Already saved</em> when you
+            had it, or the error when something went wrong.
+        </p>
+        <ol class="steps">
+            <li>
+                <strong>Add Action</strong> → search <strong>Get Dictionary Value</strong>, tap it,
+                and type <code>message</code> as the key.
+            </li>
+            <li>
+                <strong>Add Action</strong> → search <strong>Show Notification</strong>, tap into
+                its text, and tap <strong>Dictionary Value</strong> in the bar above the keyboard.
+            </li>
+        </ol>
+
+        <h3>Optional: ask for tags</h3>
+        <p class="muted">
+            Adds a small prompt on every save. Type a few comma-separated tags — or just tap
+            <strong>Done</strong>: left empty, tags are filled in here as usual.
+        </p>
+        <ol class="steps">
+            <li>
+                <strong>Add Action</strong> → search <strong>Ask for Input</strong>, tap it, set
+                its prompt to <em>Tags</em> — then drag it <strong>above</strong> Get Contents of
+                URL.
+            </li>
+            <li>
+                In the address, place the cursor just <em>before</em> <code>&amp;url=</code>, type
+                <code>&amp;tags=</code>, and tap <strong>Provided Input</strong> in the bar above
+                the keyboard. Keep <code>&amp;url=</code> last — links that carry their own query
+                string depend on it.
+            </li>
+        </ol>
     </section>
 
     <section class="panel">

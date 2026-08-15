@@ -79,6 +79,12 @@ public static class ApiEndpoints
 
         var dto = Dto(result.Bookmark);
         dto["created"] = result.Created;
+
+        // A human-readable summary of what happened, in every create response — the iOS Shortcut's
+        // optional "Saved" banner is a Show Notification of this one field, which is also why
+        // Error() carries a "message" too: the same two actions then surface failures.
+        var label = result.Bookmark.Title.Length > 0 ? result.Bookmark.Title : result.Bookmark.Url;
+        dto["message"] = (result.Created ? "Saved: " : "Already saved: ") + label;
         return Results.Json(dto);
     }
 
@@ -95,7 +101,7 @@ public static class ApiEndpoints
     };
 
     private static IResult Error(string message) =>
-        Results.Json(new { error = message }, statusCode: StatusCodes.Status400BadRequest);
+        Results.Json(new { error = message, message }, statusCode: StatusCodes.Status400BadRequest);
 
     /// <summary>
     /// Deliberately does not use [FromBody] model binding. iOS Shortcuts can only attach a JSON
@@ -224,7 +230,7 @@ public sealed class ApiTokenFilter(CredentialStore credentials) : IEndpointFilte
         if (!credentials.VerifyToken(ExtractToken(context.HttpContext.Request)))
         {
             return Results.Json(
-                new { error = "Missing or invalid API token." },
+                new { error = "Missing or invalid API token.", message = "Missing or invalid API token." },
                 statusCode: StatusCodes.Status401Unauthorized);
         }
 

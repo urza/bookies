@@ -245,7 +245,10 @@ API rules:
   is a silent truncation. `ResolveUrl` detects exactly that case — bound value is a strict prefix of
   the raw remainder, and the link already had a query — and takes the raw text instead. Don't
   "simplify" this away; losing half a URL is invisible until you click it months later.
-- Return the created/found bookmark as JSON. Non-2xx responses get a plain `{"error": "..."}`.
+- Return the created/found bookmark as JSON, plus a human-readable `message` ("Saved: …" /
+  "Already saved: …") — the iOS Shortcut's optional notification shows exactly that field.
+  Non-2xx responses get `{"error": "...", "message": "..."}`, same text in both, for the same
+  reason.
 
 ### Metadata fetch
 
@@ -376,15 +379,35 @@ javascript:(function(){window.open('http://HOST:8080/add?popup=true&url='+encode
 silently to `false`. The Settings page generates this snippet with the real host, so change it
 there rather than here.
 
-iOS Shortcut — *Share Sheet* input of type URL, then a single **Get Contents of URL** action:
+iOS Shortcut — Share Sheet input accepting **Safari web pages and URLs** (both — see below), then
+a single **Get Contents of URL** action:
 
 ```
-http://HOST:8080/api/add?token=YOUR_TOKEN&url=[Shortcut Input]
+http://HOST:8080/api/add?token=YOUR_TOKEN&url=<Shortcut Input chip>
 ```
 
-Title and tags come from the server-side metadata fetch and AI tagging, so the shortcut needs
+**"URLs" alone is not enough as the accepted type, and this was the bug that made the shortcut
+invisible.** Safari shares a *Safari web page* item, not a bare URL, and the share sheet filters
+shortcuts by declared input type — a URL-only shortcut simply never shows up in Safari's share
+sheet. Tick both types. With both ticked, the raw `Shortcut Input` chip in the URL field coerces
+the web-page item to its address correctly — verified on a real device — so no `Get URLs from
+Input` step is needed.
+
+Title and tags come from the server-side metadata fetch and AI tagging, so the base shortcut needs
 nothing else. Use the `Authorization: Token` header form instead if you'd rather keep the token
-out of the URL.
+out of the URL. Settings also documents two optional add-ons:
+
+- **A "Saved" banner** — `Get Dictionary Value` of `message` + `Show Notification`. This is what
+  the `message` field on every `/api/add` / `POST /api/bookmarks` response exists for (errors and
+  the 401 carry `message` too, so the same two actions surface failures). Don't remove the field.
+- **A tags prompt** — `Ask for Input` dragged above the URL call, inserted as `&tags=<Provided
+  Input>` *before* `&url=`, which must stay the last parameter (see `ResolveUrl`). An empty answer
+  normalises to no tags, so AI tagging still runs — that's `BookmarkService`'s `tags.Count == 0`
+  check doing the work.
+
+A redacted screenshot of the finished base shortcut lives at `wwwroot/ios-shortcut.jpeg` and is
+shown on Settings. `wwwroot` is served without authentication, so any replacement screenshot must
+have the host and token painted over **before** it lands in the repo.
 
 **The app cannot ship an installable shortcut, and this is settled — don't reopen it.** Apple's
 `shortcuts://import-shortcut?url=…` scheme will import from any reachable URL, so self-hosting the
@@ -392,8 +415,15 @@ file is not the obstacle; signing is. Since iOS 15 a `.shortcut` must be signed 
 import it, signing only happens via `shortcuts sign` on a **Mac** (or an iOS 12–14 device), and
 `--mode anyone` notarises through iCloud. A shortcut prefilled with a user's host and token is a
 different file per user, so it would need signing per request — impossible from ASP.NET on Linux.
-Settings therefore teaches the six taps and links one third-party Linkding shortcut for the
-impatient, flagged as such because installing it means giving a stranger's shortcut your API token.
+Settings therefore teaches building it by hand, in seven steps.
+
+**Don't link the "Add to Linkding" iCloud shortcut again** (Settings used to). Its decompiled
+plist shows it never calls the Linkding API: it collects only a hostname (no token), builds
+`https://<host>/bookmarks/new?...&auto_close` — Linkding's *web UI* form, a route Bookies doesn't
+have — and opens it in a web view, with `https://` hardcoded. It cannot work against Bookies. Any
+replacement candidate must be decompiled and checked first (iCloud serves the plist via
+`icloud.com/shortcuts/api/records/<id>`), and one that posts to `/api/bookmarks/` with a
+`Authorization: Token` header would work — that surface is kept Linkding-compatible on purpose.
 
 ## Status
 
