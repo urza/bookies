@@ -62,26 +62,39 @@
                 <strong>URLs</strong> ticked. Safari shares a <em>web page</em>, not a bare URL —
                 a shortcut accepting only URLs never appears in Safari's share sheet.
             </li>
+            <li>
+                <strong>Add Action</strong> → search <strong>Get URLs from Input</strong>, tap it.
+                It should read <em>Get URLs from</em> <strong>Shortcut Input</strong>. This step is
+                what reliably turns the shared page into its address — the raw
+                <em>Shortcut Input</em> chip can hand over the page's <em>title</em> instead, and
+                the save fails.
+            </li>
             <li><strong>Add Action</strong> → search <strong>Get Contents of URL</strong>, tap it.</li>
             <li>Paste the address below into its <strong>URL</strong> field.</li>
             <li>
-                Leave the cursor at the very end and tap <strong>Shortcut Input</strong> in the bar
-                above the keyboard, so the field ends with <code>&amp;url=</code> followed by a
-                blue chip.
+                Leave the cursor at the very end and tap <strong>URLs</strong> in the bar above the
+                keyboard — the output of step 3 — so the field ends with <code>&amp;url=</code>
+                followed by a blue chip.
             </li>
             <li>Name it — that name is what you'll tap in the Share Sheet.</li>
         </ol>
 
         <p class="muted">
-            Step 4 — your address and token are already in it. It ends at <code>&amp;url=</code>
-            on purpose; the blue chip from step 5 is what completes it.
+            Step 5 — your address and token are already in it. It ends at <code>&amp;url=</code>
+            on purpose; the blue chip from step 6 is what completes it.
         </p>
         <textarea class="snippet" data-copy readonly onclick="this.select()">@Model.ShortcutUrl</textarea>
 
         <details>
             <summary class="muted">What the finished shortcut looks like</summary>
             <img class="screenshot" src="/ios-shortcut.jpeg"
-                 alt="The finished shortcut: Receive Safari Web Pages and URLs from Share Sheet, then Get Contents of URL with the address ending in url= followed by the Shortcut Input chip." />
+                 alt="The finished shortcut: Receive Safari Web Pages and URLs from Share Sheet, then Get Contents of URL with the address ending in url= followed by a blue chip." />
+            <p class="muted">
+                The screenshot predates step 3 — yours will also have a
+                <em>Get URLs from Input</em> action above <em>Get contents of URL</em>, and a
+                <strong>URLs</strong> chip after <code>&amp;url=</code> instead of
+                <em>Shortcut Input</em>.
+            </p>
         </details>
 
         <h3>Optional: a “Saved” banner</h3>

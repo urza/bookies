@@ -380,18 +380,25 @@ silently to `false`. The Settings page generates this snippet with the real host
 there rather than here.
 
 iOS Shortcut — Share Sheet input accepting **Safari web pages and URLs** (both — see below), then
-a single **Get Contents of URL** action:
+two actions:
 
 ```
-http://HOST:8080/api/add?token=YOUR_TOKEN&url=<Shortcut Input chip>
+1. Get URLs from Input           (from Shortcut Input)
+2. Get Contents of URL:  http://HOST:8080/api/add?token=YOUR_TOKEN&url=<URLs chip>
 ```
 
-**"URLs" alone is not enough as the accepted type, and this was the bug that made the shortcut
-invisible.** Safari shares a *Safari web page* item, not a bare URL, and the share sheet filters
-shortcuts by declared input type — a URL-only shortcut simply never shows up in Safari's share
-sheet. Tick both types. With both ticked, the raw `Shortcut Input` chip in the URL field coerces
-the web-page item to its address correctly — verified on a real device — so no `Get URLs from
-Input` step is needed.
+Both halves of that were each, at some point, the bug that broke the whole thing on a real
+device — don't simplify either away:
+
+- **"URLs" alone is not enough as the accepted type.** Safari shares a *Safari web page* item,
+  not a bare URL, and the share sheet filters shortcuts by declared input type — a URL-only
+  shortcut simply never shows up in Safari's share sheet. Tick both types.
+- **`Get URLs from Input` is required, not belt-and-braces.** The raw `Shortcut Input` chip
+  dropped into the URL text sometimes coerces the web-page item to its *title* instead of its
+  address (observed live: the server got `url=Počasí` and answered "A valid http(s) url is
+  required"), even though the same chip worked in an earlier test. Third-party shortcuts read the
+  `Page URL` property explicitly for the same reason. `Get URLs from Input` extracts the address
+  deterministically from either input form.
 
 Title and tags come from the server-side metadata fetch and AI tagging, so the base shortcut needs
 nothing else. Use the `Authorization: Token` header form instead if you'd rather keep the token
@@ -406,8 +413,9 @@ out of the URL. Settings also documents two optional add-ons:
   check doing the work.
 
 A redacted screenshot of the finished base shortcut lives at `wwwroot/ios-shortcut.jpeg` and is
-shown on Settings. `wwwroot` is served without authentication, so any replacement screenshot must
-have the host and token painted over **before** it lands in the repo.
+shown on Settings. It predates the `Get URLs from Input` step (the page's caption says so) — if
+it's ever retaken, remember that `wwwroot` is served without authentication, so any replacement
+screenshot must have the host and token painted over **before** it lands in the repo.
 
 **The app cannot ship an installable shortcut, and this is settled — don't reopen it.** Apple's
 `shortcuts://import-shortcut?url=…` scheme will import from any reachable URL, so self-hosting the
