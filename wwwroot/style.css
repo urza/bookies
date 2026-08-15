@@ -1,7 +1,7 @@
-/* The palette is taken from the app's own mark rather than invented alongside it: favicon.svg is a
-   bookmark ribbon knocked out of an amber tile, so amber is the accent and the tile's dark ink is
-   what sits on top of it. One accent, used for every interactive fill, on a quiet near-neutral
-   ground — the colour in the interface should be the thing you can act on.
+/* One accent, used for every interactive fill, on a quiet ground — the colour in the interface
+   should be the thing you can act on. The dark theme is Nord; the light theme keeps the warm amber
+   the icon is drawn in. Both accents are warm yellows, which is what lets the amber favicon sit in
+   either header without looking like it came from somewhere else.
 
    --accent is a fill colour in both themes; --link is the same idea at text size, which on white
    needs to be darker to stay readable. --ink is what goes on top of a filled accent or danger
@@ -27,19 +27,28 @@
     --shadow: 0 1px 2px rgb(0 0 0 / .05), 0 1px 12px rgb(0 0 0 / .03);
 }
 
+/* Nord. The four surfaces are its Polar Night ramp used as it was drawn — nord0 is the card, so the
+   ground is nord0 taken one step down and cards lift off it rather than merging into it. Nord is a
+   dim theme rather than a black one, and that step is the whole reason a list of cards still reads
+   as a list of cards.
+
+   Two values are not literal Nord, both for contrast at text size: nord3 (#4c566a), the comment
+   grey, is 1.6:1 on the card and unusable for the dates and hosts, so --muted is nord4 brought down
+   to 5.5:1; and nord11 (#bf616a) is 3.0:1, which is fine as a fill but fails as the remove button's
+   own label, so --danger is that red lightened to 4.9:1. Everything else is Nord as published. */
 @media (prefers-color-scheme: dark) {
     :root {
-        --bg: #0e1013;
-        --card: #15181c;
-        --fg: #e7e9ea;
-        --muted: #8f979f;
-        --line: #252a31;
-        --line-strong: #39414a;
-        --hover: #1c2026;
-        --accent: #f2b544;
-        --link: #f2b544;
-        --ink: #14161a;
-        --danger: #f0776e;
+        --bg: #212632;
+        --card: #2e3440;
+        --fg: #eceff4;
+        --muted: #a3adc0;
+        --line: #434c5e;
+        --line-strong: #4c566a;
+        --hover: #3b4252;
+        --accent: #ebcb8b;
+        --link: #ebcb8b;
+        --ink: #2e3440;
+        --danger: #e08b95;
 
         --shadow: 0 1px 2px rgb(0 0 0 / .4), 0 1px 14px rgb(0 0 0 / .25);
     }
@@ -427,7 +436,9 @@ form.panel:has(.remove) { padding-top: 2.6rem; }
     font-size: .95rem;
     padding: .05rem 0 .05rem .75rem;
     border-left: 3px solid var(--line);
-    border-left-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    /* Mixed against the card, so it needs enough accent to stay yellow — Nord's card is a lighter
+       blue-grey than a near-black ground, and a weaker mix turns the rule olive. */
+    border-left-color: color-mix(in srgb, var(--accent) 62%, transparent);
     white-space: pre-wrap;
 }
 

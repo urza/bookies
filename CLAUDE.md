@@ -279,18 +279,32 @@ OpenAI-compatible shape, so Ollama / LM Studio / llama.cpp / vLLM / LiteLLM all 
 
 ### Look
 
-The palette comes from the icon rather than being chosen alongside it: the mark is a bookmark ribbon
-on an amber tile, so amber is the accent everywhere and the tile's dark ink is what sits on top of it.
+The dark theme is **Nord**; the light theme keeps the warm amber the icon is drawn in. Both accents
+are warm yellows, which is what lets the fixed amber favicon sit in either header without looking
+like it wandered in — a cool accent would strand it, and that is the thing to check before swapping
+the palette again.
+
+Nord's four surfaces are its Polar Night ramp used as drawn, except that `nord0` is the **card** and
+`--bg` is `nord0` taken one step down, so cards lift off the ground instead of merging into it. Nord
+is a dim theme rather than a black one, and that single step is what keeps a list of cards reading as
+a list of cards. Two values are deliberately not literal Nord, both for contrast at text size:
+`nord3`, the comment grey, is 1.6:1 on the card and unusable for the dates and hosts, so `--muted` is
+`nord4` brought down to 5.5:1; and `nord11` is 3.0:1, fine as a fill but failing as the remove
+button's own label, so `--danger` is that red lightened to 4.9:1. Don't "restore" either to the
+canonical hex.
+
 One accent, spent only on things you can act on — the list is a wall of titles, and a title you can
 click is not news. Hence `--accent` on fills, `--link` for the same idea at text size (darker in the
-light theme, where amber on white is unreadable), and `--ink` for text on a filled accent or danger
+light theme, where yellow on white is unreadable), and `--ink` for text on a filled accent or danger
 control, which is dark in both themes because both fills are light. `_Layout` inlines the favicon's
-geometry beside the site title so the accent reads as the app's own colour and not a CSS decision.
+geometry beside the site title, so the mark is present at the same size in both themes.
 
 Depth is `--bg` under `--card` plus a hairline and one soft shadow — no heavy borders. `--line-strong`
 is the hover state of a border, so cards and controls answer the pointer without moving. `:root` sets
 `color-scheme` and `accent-color`, which is what makes the checkbox, the scrollbars and the search
-field's own clear button render in the theme rather than defaulting to light.
+field's own clear button render in the theme rather than defaulting to light. The description's left
+rule is a `color-mix` of the accent against the card, so it needs a high enough percentage to stay
+yellow — on Nord's lighter blue-grey card a weak mix goes olive.
 
 Two small conventions worth keeping: tags are stored bare and the `#` is drawn by CSS
 (`.tag::before`), so the marker never reaches the data; and `header .search input` is qualified past
