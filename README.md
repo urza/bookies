@@ -1,6 +1,6 @@
 # Bookies
 
-A small self-hosted bookmark manager in the spirit of [Shaarli](https://github.com/shaarli/Shaarli).
+A small simple self-hosted bookmark manager in the spirit of [Shaarli](https://github.com/shaarli/Shaarli).
 One user, one Docker container, plain JSON files on disk.
 
 - Add, search, tag, edit and delete bookmarks from a plain server-rendered UI
@@ -8,6 +8,9 @@ One user, one Docker container, plain JSON files on disk.
 - A bookmarklet for the desktop and a one-action iOS Shortcut for the phone
 - Fills in the title and description by fetching the page itself, so the phone only sends a URL
 - Optional auto-tagging by a local LLM on your own network
+
+<img width="832" height="347" alt="image" src="https://github.com/user-attachments/assets/e2f1440e-149c-4876-9346-e619d5f532a5" />
+
 
 ## Run it
 
