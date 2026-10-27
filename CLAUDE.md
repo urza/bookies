@@ -355,7 +355,7 @@ are read only when `config.json` doesn't exist yet, and ignored forever after.
 
 ## Docker
 
-Multi-stage build: `dotnet/sdk:10.0-alpine` to publish, `dotnet/aspnet:10.0-alpine` to run. Non-root
+Multi-stage build: `dotnet/sdk:10.0.403-alpine3.24` to publish, `dotnet/aspnet:10.0.14-alpine3.24` to run. Non-root
 (uid 1000), `ASPNETCORE_URLS=http://+:8080`, volume at `/data`, healthcheck against `/healthz`.
 `docker-compose.yml` is the documented way to run it.
 

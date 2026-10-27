@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0.403-alpine3.24 AS build
 WORKDIR /src
 
 # Restore before copying the rest, so source edits don't invalidate the package layer.
@@ -10,7 +10,7 @@ COPY . .
 # a single output directory is unsupported (NETSDK1194).
 RUN dotnet publish Bookies.csproj -c Release -o /app --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.14-alpine3.24
 WORKDIR /app
 COPY --from=build /app .
 
